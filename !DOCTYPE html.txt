@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mathy - Your Friendly Math Companion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --accent: #6366f1;
+        }
+
+        .dark {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent: #818cf8;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .glass-card {
+            background-color: var(--bg-card);
+            border: 1px solid rgba(128, 128, 128, 0.1);
+            transition: transform 0.2s ease, background-color 0.3s ease;
+        }
+
+        .btn-math {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-math:active {
+            transform: scale(0.95);
+        }
+
+        .display-screen {
+            background: #00000020;
+            border-radius: 1rem;
+        }
+
+        .tab-active {
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .mode-toggle {
+            cursor: pointer;
+            width: 50px;
+            height: 26px;
+            background: #cbd5e1;
+            border-radius: 100px;
+            position: relative;
+            transition: background 0.3s;
+        }
+
+        .dark .mode-toggle {
+            background: #475569;
+        }
+
+        .mode-toggle::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+
+        .dark .mode-toggle::before {
+            transform: translateX(24px);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Navigation/Header -->
+    <header class="sticky top-0 z-50 py-4 px-6 bg-transparent">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <svg width="35" height="35" viewBox="0 0 100 100">
+                    <rect x="20" y="15" width="60" height="75" rx="12" fill="var(--accent)" />
+                    <rect x="30" y="25" width="40" height="15" rx="4" fill="#1e293b" />
+                    <circle cx="40" cy="55" r="4" fill="white" />
+                    <circle cx="60" cy="55" r="4" fill="white" />
+                    <path d="M40 70 Q50 80 60 70" stroke="white" stroke-width="4" fill="none" stroke-linecap="round" />
+                </svg>
+                <h1 class="text-xl font-bold tracking-tight">Mathy</h1>
+            </div>
+
+            <nav class="hidden md:flex gap-8">
+                <button onclick="switchTab('calc')" id="tab-calc" class="tab-active py-1 text-sm font-semibold">Calculator</button>
+                <button onclick="switchTab('unit')" id="tab-unit" class="py-1 text-sm font-semibold opacity-60">Converter</button>
+                <button onclick="switchTab('solve')" id="tab-solve" class="py-1 text-sm font-semibold opacity-60">Solver</button>
+                <button onclick="switchTab('tools')" id="tab-tools" class="py-1 text-sm font-semibold opacity-60">Quick Tools</button>
+            </nav>
+
+            <div class="flex items-center gap-4">
+                <div class="mode-toggle" onclick="toggleTheme()"></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- MAIN CONTENT AREA -->
+        <div class="lg:col-span-2">
+            
+            <!-- SECTION 1: CALCULATOR -->
+            <section id="view-calc" class="block animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div class="glass-card rounded-3xl p-6 shadow-sm">
+                    <div class="display-screen p-6 text-right mb-6">
+                        <div id="prev-op" class="text-sm opacity-50 h-6 mb-1 overflow-hidden"></div>
+                        <div id="current-op" class="text-5xl font-light truncate">0</div>
+                    </div>
+                    
+                    <div class="grid grid-cols-4 gap-4">
+                        <button onclick="clearCalc()" class="btn-math p-5 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 font-bold">AC</button>
+                        <button onclick="deleteLast()" class="btn-math p-5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500"><i class="fas fa-backspace"></i></button>
+                        <button onclick="appendOp('/')" class="btn-math p-5 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 font-bold">÷</button>
+                        <button onclick="appendOp('*')" class="btn-math p-5 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 font-bold">×</button>
+                        
+                        <button onclick="appendNum('7')" class="btn-math p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium">7</button>
+                        <button onclick="appendNum('8')" class="btn-math p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium">8</button>
+                        <button onclick="appendNum('9')" class="btn-math p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium">9</button>
+                        <button onclick="appendOp('-')" class="btn-math p-5 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 font-bold">−</button>
+                        
+                        <button onclick="appendNum('4')" class="btn-math p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium">4</button>
+                        <button onclick="appendNum('5')" class="btn-math p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium">5</button>
+                        <button onclick="appendNum('6')" class="btn-math p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium">6</button>
+                        <button onclick="appendOp('+')" class="btn-math p-5 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 font-bold">+</button>
+                        
+                        <button onclick="appendNum('1')" class="btn-math p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium">1</button>
+                        <button onclick="appendNum('2')" class="btn-math p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium">2</button>
+                        <button onclick="appendNum('3')" class="btn-math p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium">3</button>
+                        <button onclick="calculate()" class="btn-math row-span-2 p-5 rounded-2xl bg-indigo-600 text-white font-bold text-2xl shadow-lg shadow-indigo-500/30">=</button>
+                        
+                        <button onclick="appendNum('0')" class="btn-math col-span-2 p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium">0</button>
+                        <button onclick="appendNum('.')" class="btn-math p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium">.</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: CONVERTER -->
+            <section id="view-unit" class="hidden animate-in fade-in duration-300">
+                <div class="glass-card rounded-3xl p-8 shadow-sm">
+                    <h2 class="text-xl font-bold mb-6">Unit Converter</h2>
+                    <div class="space-y-6">
+                        <select id="unit-category" onchange="updateUnitOptions()" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none outline-none">
+                            <option value="length">Length</option>
+                            <option value="weight">Weight</option>
+                            <option value="temp">Temperature</option>
+                        </select>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <input type="number" id="unit-input" placeholder="0.00" oninput="doConversion()" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none text-2xl font-semibold">
+                                <select id="unit-from" onchange="doConversion()" class="w-full p-2 text-sm opacity-60 bg-transparent outline-none"></select>
+                            </div>
+                            <div class="space-y-2">
+                                <input type="text" id="unit-result" readonly class="w-full p-4 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-2xl text-2xl font-semibold outline-none" value="0">
+                                <select id="unit-to" onchange="doConversion()" class="w-full p-2 text-sm opacity-60 bg-transparent outline-none"></select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: SOLVER -->
+            <section id="view-solve" class="hidden animate-in fade-in duration-300">
+                <div class="glass-card rounded-3xl p-8 shadow-sm">
+                    <h2 class="text-xl font-bold mb-2">Smart Solver</h2>
+                    <p class="text-sm opacity-60 mb-8">Enter your math problem in plain text.</p>
+                    <div class="relative mb-6">
+                        <input type="text" id="solve-input" placeholder="e.g., 20% of 1500" class="w-full p-5 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 ring-indigo-500/20">
+                        <button onclick="solveQuery()" class="absolute right-3 top-3 bottom-3 px-6 bg-indigo-600 text-white rounded-xl">Solve</button>
+                    </div>
+                    <div id="solve-output-container" class="hidden p-6 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl">
+                        <div class="text-xs uppercase font-bold tracking-wider opacity-40 mb-1">Result</div>
+                        <div id="solve-output" class="text-3xl font-bold"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 4: QUICK TOOLS -->
+            <section id="view-tools" class="hidden animate-in fade-in duration-300">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="glass-card p-6 rounded-3xl">
+                        <h3 class="font-bold mb-4">Geometry Formulas</h3>
+                        <ul class="space-y-3 text-sm opacity-70">
+                            <li class="flex justify-between"><span>Circle Area:</span> <code class="bg-slate-100 dark:bg-slate-800 px-1 rounded">πr²</code></li>
+                            <li class="flex justify-between"><span>Triangle Area:</span> <code class="bg-slate-100 dark:bg-slate-800 px-1 rounded">½bh</code></li>
+                            <li class="flex justify-between"><span>Sphere Vol:</span> <code class="bg-slate-100 dark:bg-slate-800 px-1 rounded">⁴⁄₃πr³</code></li>
+                        </ul>
+                    </div>
+                    <div class="glass-card p-6 rounded-3xl">
+                        <h3 class="font-bold mb-4">Physics Constants</h3>
+                        <ul class="space-y-3 text-sm opacity-70">
+                            <li class="flex justify-between"><span>Gravity (g):</span> <span>9.81 m/s²</span></li>
+                            <li class="flex justify-between"><span>Speed of Light:</span> <span>~3×10⁸ m/s</span></li>
+                            <li class="flex justify-between"><span>Pi (π):</span> <span>3.14159...</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- SIDEBAR: HISTORY & HELP -->
+        <div class="space-y-6">
+            <div class="glass-card rounded-3xl p-6 shadow-sm">
+                <h3 class="text-sm font-bold uppercase tracking-widest opacity-40 mb-4">Calculation History</h3>
+                <div id="calc-history" class="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+                    <p class="text-sm opacity-50 italic">No recent activity</p>
+                </div>
+                <button onclick="clearHistory()" class="mt-4 text-xs text-red-500 font-semibold hover:underline">Clear History</button>
+            </div>
+
+            <div class="bg-indigo-600 rounded-3xl p-6 text-white shadow-lg shadow-indigo-500/20">
+                <h3 class="font-bold mb-2 flex items-center gap-2">
+                    <i class="fas fa-lightbulb"></i> Pro Tip
+                </h3>
+                <p class="text-sm text-indigo-100 leading-relaxed">
+                    You can use your keyboard! Press <kbd class="bg-indigo-500 px-1 rounded">Enter</kbd> to solve and <kbd class="bg-indigo-500 px-1 rounded">Esc</kbd> to clear.
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- THEME LOGIC ---
+        function toggleTheme() {
+            document.body.classList.toggle('dark');
+            localStorage.setItem('mathy-theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+        }
+
+        // Initialize Theme
+        if (localStorage.getItem('mathy-theme') === 'dark') {
+            document.body.classList.add('dark');
+        }
+
+        // --- NAVIGATION ---
+        function switchTab(tabId) {
+            const tabs = ['calc', 'unit', 'solve', 'tools'];
+            tabs.forEach(t => {
+                document.getElementById(`view-${t}`).classList.add('hidden');
+                const tabBtn = document.getElementById(`tab-${t}`);
+                if (tabBtn) {
+                    tabBtn.classList.remove('tab-active');
+                    tabBtn.classList.add('opacity-60');
+                }
+            });
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('tab-active');
+                activeBtn.classList.remove('opacity-60');
+            }
+        }
+
+        // --- CALCULATOR LOGIC ---
+        let currentInput = '0';
+        let previousInput = '';
+        let operation = null;
+        let shouldResetDisplay = false;
+        let history = [];
+
+        const display = document.getElementById('current-op');
+        const prevDisplay = document.getElementById('prev-op');
+        const historyList = document.getElementById('calc-history');
+
+        function updateDisplay() {
+            display.innerText = currentInput;
+            prevDisplay.innerText = previousInput;
+        }
+
+        function appendNum(num) {
+            if (currentInput === '0' || shouldResetDisplay) {
+                currentInput = num;
+                shouldResetDisplay = false;
+            } else {
+                if (num === '.' && currentInput.includes('.')) return;
+                currentInput += num;
+            }
+            updateDisplay();
+        }
+
+        function clearCalc() {
+            currentInput = '0';
+            previousInput = '';
+            operation = null;
+            updateDisplay();
+        }
+
+        function deleteLast() {
+            if (shouldResetDisplay) return;
+            currentInput = currentInput.length === 1 ? '0' : currentInput.slice(0, -1);
+            updateDisplay();
+        }
+
+        function appendOp(op) {
+            if (operation !== null && !shouldResetDisplay) calculate();
+            previousInput = currentInput + ' ' + op;
+            operation = op;
+            shouldResetDisplay = true;
+            updateDisplay();
+        }
+
+        function calculate() {
+            if (operation === null || shouldResetDisplay) return;
+            
+            let result;
+            const prev = parseFloat(previousInput);
+            const current = parseFloat(currentInput);
+
+            switch (operation) {
+                case '+': result = prev + current; break;
+                case '-': result = prev - current; break;
+                case '*': result = prev * current; break;
+                case '/': result = current === 0 ? 'Error' : prev / current; break;
+                default: return;
+            }
+
+            addToHistory(`${previousInput} ${currentInput} = ${result}`);
+            currentInput = result.toString();
+            operation = null;
+            previousInput = '';
+            shouldResetDisplay = true;
+            updateDisplay();
+        }
+
+        function addToHistory(item) {
+            history.unshift(item);
+            if (history.length > 10) history.pop();
+            renderHistory();
+        }
+
+        function renderHistory() {
+            if (history.length === 0) {
+                historyList.innerHTML = '<p class="text-sm opacity-50 italic">No recent activity</p>';
+                return;
+            }
+            historyList.innerHTML = history.map(h => `
+                <div class="text-xs font-medium p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                    ${h}
+                </div>
+            `).join('');
+        }
+
+        function clearHistory() {
+            history = [];
+            renderHistory();
+        }
+
+        // --- UNIT CONVERTER ---
+        const units = {
+            length: { m: 1, km: 1000, cm: 0.01, inch: 0.0254, ft: 0.3048, mile: 1609.34 },
+            weight: { kg: 1, g: 0.001, lbs: 0.453592, oz: 0.0283495 },
+            temp: { c: 'c', f: 'f', k: 'k' }
+        };
+
+        function updateUnitOptions() {
+            const cat = document.getElementById('unit-category').value;
+            const from = document.getElementById('unit-from');
+            const to = document.getElementById('unit-to');
+            from.innerHTML = ''; to.innerHTML = '';
+
+            Object.keys(units[cat]).forEach(u => {
+                from.add(new Option(u.toUpperCase(), u));
+                to.add(new Option(u.toUpperCase(), u));
+            });
+            
+            if (cat === 'length') to.value = 'km';
+            else if (cat === 'weight') to.value = 'lbs';
+            else to.value = 'f';
+            doConversion();
+        }
+
+        function doConversion() {
+            const cat = document.getElementById('unit-category').value;
+            const val = parseFloat(document.getElementById('unit-input').value) || 0;
+            const from = document.getElementById('unit-from').value;
+            const to = document.getElementById('unit-to').value;
+            let result = 0;
+
+            if (cat === 'temp') {
+                let tempInC = from === 'c' ? val : (from === 'f' ? (val - 32) * 5/9 : val - 273.15);
+                result = to === 'c' ? tempInC : (to === 'f' ? (tempInC * 9/5) + 32 : tempInC + 273.15);
+            } else {
+                result = (val * units[cat][from]) / units[cat][to];
+            }
+            document.getElementById('unit-result').value = result.toLocaleString(undefined, { maximumFractionDigits: 4 });
+        }
+
+        // --- SOLVER ---
+        function solveQuery() {
+            let input = document.getElementById('solve-input').value.toLowerCase().trim();
+            const outBox = document.getElementById('solve-output-container');
+            const outText = document.getElementById('solve-output');
+            if (!input) return;
+
+            try {
+                let result;
+                if (input.includes('of')) {
+                    const parts = input.split('of');
+                    result = (parseFloat(parts[0]) / 100) * parseFloat(parts[1]);
+                } else {
+                    const clean = input.replace(/[^-()\d/*+.]/g, '');
+                    result = Function('"use strict";return (' + clean + ')')();
+                }
+                outText.innerText = result.toLocaleString();
+                outBox.classList.remove('hidden');
+            } catch (e) {
+                outText.innerText = "Error";
+                outBox.classList.remove('hidden');
+            }
+        }
+
+        // KEYBOARD SUPPORT
+        window.addEventListener('keydown', (e) => {
+            if (document.activeElement.tagName === 'INPUT') {
+                if (e.key === 'Enter' && document.activeElement.id === 'solve-input') solveQuery();
+                return;
+            }
+            if (e.key >= 0 && e.key <= 9) appendNum(e.key);
+            if (e.key === '.') appendNum('.');
+            if (e.key === '+') appendOp('+');
+            if (e.key === '-') appendOp('-');
+            if (e.key === '*') appendOp('*');
+            if (e.key === '/') appendOp('/');
+            if (e.key === 'Enter') calculate();
+            if (e.key === 'Backspace') deleteLast();
+            if (e.key === 'Escape') clearCalc();
+        });
+
+        window.onload = () => updateUnitOptions();
+    </script>
+</body>
+</html>
